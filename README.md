@@ -1,3 +1,7 @@
+Markdown based html generator.
+Generation requires: HTML template and markdown template.
+Additional meta-extensions allow you to add metaprogramming to this process.
+
 ## Installation
 
 ```console
@@ -27,5 +31,4 @@ Options:
   -a PARAMS, --add=PARAMS
                         Add parameter in format name:value
   -g GIT_DIR, --git-dir=GIT_DIR
-                        Set GIT directory location, e.g. /home/user/repo/.git
-```
+                        Set GIT directory location, e.g. /home/user/repo/.git```

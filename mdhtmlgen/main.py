@@ -221,9 +221,9 @@ def main_m():
 	parser.add_option('-H', '--html', dest='html', help='HTML template filename (*.t)')
 	parser.add_option('-t', '--trace', dest='trace', action='store_true', default=False, help='Print diagnostic traces')
 	parser.add_option('-o', '--output', dest='output', help='Set output file')
-	parser.add_option('-m', '--markdown-ext', dest='markdown_ext', default='', help='Set markdown extension list, coma separated, e.g. meta,toc,footnotes')
+	parser.add_option('-m', '--markdown-ext', dest='markdown_ext', default='', help='Set markdown extension list, coma separated, e.g. meta,toc,footnotes,...')
 	parser.add_option('-d', '--date-fmt', dest='date_fmt', default='%d-%m-%Y %H:%M:%S', help='Set date format, e.g. %d-%m-%Y %H:%M:%S')
-	parser.add_option('-e', '--ext', dest='ext', default='', help='Set extension list, e.g. meta,glob,filename,date')
+	parser.add_option('-e', '--ext', dest='ext', default='', help='Set extension list, e.g. meta,glob,filename,date,...')
 
 	# hook point
 	for hook in extensions:

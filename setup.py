@@ -2,11 +2,16 @@
 
 from setuptools import setup, find_packages
 
+def read_file(filename):
+	with open(filename, 'r', encoding='utf-8') as f:
+		return f.read()
+
 setup(
 	name='mdhtmlgen',
-	version='0.1',
+	version='0.2',
 	description='Markdown based html generator.',
-	long_description='Markdown based html generator. Generation requires: HTML template and markdown template, and additional meta-extensions allow you to add metaprogramming to this process',
+	long_description_content_type='text/markdown',
+	long_description=read_file('README.md'),
 	classifiers=[
 		'Development Status :: 3 - Alpha',
 		'Environment :: Console',
