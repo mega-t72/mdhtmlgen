@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import main
+from .main import *
 
 if __name__ == '__main__':
-	main.main_m()
+	main_m()
