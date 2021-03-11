@@ -1,6 +1,7 @@
 Markdown based html generator.
-Generation requires: HTML template and markdown template.
-Additional meta-extensions allow you to add metaprogramming to this process.
+
+Generation requires: HTML template and markdown template.<br />
+The generator has additional meta extensions that allow you to do metaprogramming in HTML.
 
 Read this in other languages: [English](README.md), [Russian](README.ru.md)
 
@@ -134,3 +135,5 @@ Here we have extracted `%(input-file-date)s` from the `other-example.md` source
 * `glob`<br />
 Concatenates meta parameters from different sources, example: `%(glob:row:*.md)s`.<br />
 Here we have concatenated `%(row)s` from all sources using the search pattern `*.md`.
+
+Native `mdhtmlgen` extensions can be enabled with the` -e` or `--ext` options.
