@@ -54,8 +54,8 @@ def extGit(*args):
 		def stdResult(gitStdOut, gitStdErr):
 			return ('<font color="red">%s</font>' % gitStdErr.decode()) if gitStdErr else gitStdOut.decode()
 
-		gitDir = '--git-dir="%s"' % options.git_dir
-		date = '"--date=format:%s"' % options.date_fmt
+		gitDir = '--git-dir=%s' % options.git_dir
+		date = '--date=format:%s' % options.date_fmt
 
 		# git --git-dir="%s" log -1 "--date=format:%s" --format=%ad -- filename
 		p = Popen(['git', gitDir, 'log', '-1', date, '--format=%ad', '--', filename], stdout=PIPE, stderr=PIPE)
@@ -63,7 +63,7 @@ def extGit(*args):
 		files[filename]['input-date-commit'] = stdResult(gitStdOut, gitStdErr)
 
 		# git --git-dir="%s" log -1 "--format=%an <%ae>" -- filename
-		p = Popen(['git', gitDir, 'log', '-1', '"--format=%an <%ae>"', '--', filename], stdout=PIPE, stderr=PIPE)
+		p = Popen(['git', gitDir, 'log', '-1', '--format=%an <%ae>', '--', filename], stdout=PIPE, stderr=PIPE)
 		gitStdOut, gitStdErr = p.communicate()
 		files[filename]['input-commiter'] = stdResult(gitStdOut, gitStdErr)
 
@@ -73,7 +73,7 @@ def extGit(*args):
 		files[filename]['input-date-add'] = stdResult(gitStdOut, gitStdErr)
 
 		# git --git-dir="%s" log -1 "--format=%an <%ae>" --diff-filter=A -- filename
-		p = Popen(['git', gitDir, 'log', '-1', '"--format=%an <%ae>"', '--diff-filter=A', '--', filename], stdout=PIPE, stderr=PIPE)
+		p = Popen(['git', gitDir, 'log', '-1', '--format=%an <%ae>', '--diff-filter=A', '--', filename], stdout=PIPE, stderr=PIPE)
 		gitStdOut, gitStdErr = p.communicate()
 		files[filename]['input-author'] = stdResult(gitStdOut, gitStdErr)
 
