@@ -54,28 +54,42 @@ def extGit(*args):
 		def stdResult(gitStdOut, gitStdErr):
 			return ('<font color="red">%s</font>' % gitStdErr.decode()) if gitStdErr else gitStdOut.decode()
 
+		commPrefix = os.path.commonprefix([os.path.abspath(options.git_dir), os.path.abspath(filename)])
+		gitFileName = filename[len(commPrefix):]
 		gitDir = '--git-dir=%s' % options.git_dir
 		date = '--date=format:%s' % options.date_fmt
 
-		# git --git-dir="%s" log -1 "--date=format:%s" --format=%ad -- filename
-		p = Popen(['git', gitDir, 'log', '-1', date, '--format=%ad', '--', filename], stdout=PIPE, stderr=PIPE)
+		# git --git-dir="%s" log -1 "--date=format:%s" --format=%ad -- gitFileName
+		p = Popen(['git', gitDir, 'log', '-1', date, '--format=%ad', '--', gitFileName], stdout=PIPE, stderr=PIPE)
 		gitStdOut, gitStdErr = p.communicate()
 		files[filename]['input-date-commit'] = stdResult(gitStdOut, gitStdErr)
 
-		# git --git-dir="%s" log -1 "--format=%an <%ae>" -- filename
-		p = Popen(['git', gitDir, 'log', '-1', '--format=%an <%ae>', '--', filename], stdout=PIPE, stderr=PIPE)
+		if options.trace:
+			print('[git] args: %s' % p.args, file=sys.stderr)
+
+		# git --git-dir="%s" log -1 "--format=%an <%ae>" -- gitFileName
+		p = Popen(['git', gitDir, 'log', '-1', '--format=%an &lt;%ae&gt;', '--', gitFileName], stdout=PIPE, stderr=PIPE)
 		gitStdOut, gitStdErr = p.communicate()
 		files[filename]['input-commiter'] = stdResult(gitStdOut, gitStdErr)
 
-		# git --git-dir="%s" log -1 "--date=format:%s" --format=%ad --diff-filter=A -- filename
-		p = Popen(['git', gitDir, 'log', '-1', date, '--format=%ad', '--diff-filter=A', '--', filename], stdout=PIPE, stderr=PIPE)
+		if options.trace:
+			print('[git] args: %s' % p.args, file=sys.stderr)
+
+		# git --git-dir="%s" log -1 "--date=format:%s" --format=%ad --diff-filter=A -- gitFileName
+		p = Popen(['git', gitDir, 'log', '-1', date, '--format=%ad', '--diff-filter=A', '--', gitFileName], stdout=PIPE, stderr=PIPE)
 		gitStdOut, gitStdErr = p.communicate()
 		files[filename]['input-date-add'] = stdResult(gitStdOut, gitStdErr)
 
-		# git --git-dir="%s" log -1 "--format=%an <%ae>" --diff-filter=A -- filename
-		p = Popen(['git', gitDir, 'log', '-1', '--format=%an <%ae>', '--diff-filter=A', '--', filename], stdout=PIPE, stderr=PIPE)
+		if options.trace:
+			print('[git] args: %s' % p.args, file=sys.stderr)
+
+		# git --git-dir="%s" log -1 "--format=%an <%ae>" --diff-filter=A -- gitFileName
+		p = Popen(['git', gitDir, 'log', '-1', '--format=%an &lt;%ae&gt;', '--diff-filter=A', '--', gitFileName], stdout=PIPE, stderr=PIPE)
 		gitStdOut, gitStdErr = p.communicate()
 		files[filename]['input-author'] = stdResult(gitStdOut, gitStdErr)
+
+		if options.trace:
+			print('[git] args: %s' % p.args, file=sys.stderr)
 
 def extCustom(*args):
 	if args[0] == HOOKPOINT_INIT:

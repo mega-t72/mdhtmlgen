@@ -8,7 +8,7 @@ def read_file(filename):
 
 setup(
 	name='mdhtmlgen',
-	version='0.7',
+	version='0.8',
 	description='Markdown based html generator',
 	long_description_content_type='text/markdown',
 	long_description=read_file('README.md'),
