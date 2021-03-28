@@ -1,0 +1,16 @@
+.desc::before {
+  content: "↑";
+}
+
+.sorted::before {
+  content: "↓";
+}
+
+th::before {
+  content: "\00a0";
+  font-family: monospace;
+}
+
+.mono {
+	font-family: monospace;
+}
