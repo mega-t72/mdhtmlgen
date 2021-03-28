@@ -111,28 +111,52 @@ Into `mdhtmlgen`, you can pass a list of extensions to be used during generation
 
 Besides the `markdown` extensions,` mdhtmlgen` has its own meta extensions. At the moment there are 6 of them:
 
-* `filename`<br />
-Adds path information to the template for the source:<br />
-  * `%(input-path)s` - full source path
-  * `%(input-name)s` - name of source file
-  * `%(input-ext)s` - extension of source filename
-  * `%(input-basename)s` - basename of source<br />
-and similar information about the output:<br />
-  * `%(output-path)s`
-  * `%(output-name)s`
-  * `%(output-ext)s`
-  * `%(output-basename)s`
-* `date`<br />
-Adds information about the date and time of the last modification of the source to the template - `%(input-date)s`
-* `gitdate`<br />
-Adds to the template information about the date and time of the last modification of the source in the Git repository - `%(input-git-date)s`.<br />
+### filename
+
+Adds path information to the template for the source:
+
+* `%(input-path)s` - full source path
+* `%(input-name)s` - name of source file
+* `%(input-ext)s` - extension of source filename
+* `%(input-basename)s` - basename of source
+
+and similar information about the output:
+
+* `%(output-path)s`
+* `%(output-name)s`
+* `%(output-ext)s`
+* `%(output-basename)s`
+
+### stat
+
+Adds information about the file statistics of the source to the template:
+
+* `%(input-date-update)s` - date and time when the file was last modified
+* `%(input-date-create)s` - file creation date and time (if supported by FS)
+* `%(input-owner)s` - file owner name
+
+### git
+
+Adds information about the statistics of a file in the Git repository to the template:
+
+* `%(input-date-commit)s` - date and time when the file was last modified
+* `%(input-commiter)s` - name of the last editor of the file
+* `%(input-date-add)s` - date and time when the file was added to the repository
+* `%(input-author)s` - the name of the first editor of the file
+
 For this extension, you need to specify the path to the repository using the `--git-dir` option (a similar option exists in Git, see `man git`).
-* `custom`<br />
+
+### custom
+
 Allows you to add arbitrary meta-parameters to the template using the option `-a` or` --add`
-* `meta`<br />
+
+### meta
+
 Imports a meta-parameter from another source into a template, example: `%(input-file-date:other-example.md)s`.<br />
 Here we have extracted `%(input-file-date)s` from the `other-example.md` source
-* `glob`<br />
+
+### glob
+
 Concatenates meta parameters from different sources, example: `%(glob:row:*.md)s`.<br />
 Here we have concatenated `%(row)s` from all sources using the search pattern `*.md`.
 
