@@ -7,6 +7,7 @@ from subprocess import Popen, PIPE, STDOUT
 from markdown import Markdown
 from glob import glob
 from re import compile
+from pwd import getpwuid
 
 HOOKPOINT_INIT = 0
 HOOKPOINT_PARSE = 1
@@ -31,18 +32,50 @@ def extFileName(*args):
 			files[filename]['output-ext'] = fext
 			files[filename]['output-basename'] = bname
 
-def extDate(*args):
+def extStat(*args):
 	if args[0] == HOOKPOINT_PARSE:
 		filename, stack, files, options = args[1:5]
 		stat = os.stat(filename)
-		files[filename]['input-date'] = datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).strftime(options.date_fmt)
+		files[filename]['input-date-update'] = datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).strftime(options.date_fmt)
+		if hasattr(stat, 'st_birthtime'):
+			files[filename]['input-date-create'] = datetime.fromtimestamp(stat.st_birthtime, tz=timezone.utc).strftime(options.date_fmt)
+		else:
+			files[filename]['input-date-create'] = datetime.fromtimestamp(stat.st_ctime, tz=timezone.utc).strftime(options.date_fmt)
+		files[filename]['input-owner'] = getpwuid(stat.st_uid).pw_name
 
-def extGitDate(*args):
+def extGit(*args):
+	if args[0] == HOOKPOINT_INIT:
+		parser = args[1]
+		parser.add_option('-g', '--git-dir', dest='git_dir', default='%s/.git' % os.path.dirname(sys.argv[0]), help='Set GIT directory location, e.g. /home/user/repo/.git')
+
 	if args[0] == HOOKPOINT_PARSE:
 		filename, stack, files, options = args[1:5]
-		p = Popen(['git', '--git-dir="%s"' % options.git_dir, 'log', '-1', '"--date=format:%s"' % options.date_fmt, '--format=%cd', filename], stdout=PIPE, stderr=PIPE)
+
+		def stdResult(gitStdOut, gitStdErr):
+			return ('<font color="red">%s</font>' % gitStdErr.decode()) if gitStdErr else gitStdOut.decode()
+
+		gitDir = '--git-dir="%s"' % options.git_dir
+		date = '"--date=format:%s"' % options.date_fmt
+
+		# git --git-dir="%s" log -1 "--date=format:%s" --format=%ad -- filename
+		p = Popen(['git', gitDir, 'log', '-1', date, '--format=%ad', '--', filename], stdout=PIPE, stderr=PIPE)
 		gitStdOut, gitStdErr = p.communicate()
-		files[filename]['input-git-date'] = ('<font color="red">%s</font>' % gitStdErr.decode()) if gitStdErr else gitStdOut.decode()
+		files[filename]['input-date-commit'] = stdResult(gitStdOut, gitStdErr)
+
+		# git --git-dir="%s" log -1 "--format=%an <%ae>" -- filename
+		p = Popen(['git', gitDir, 'log', '-1', '"--format=%an <%ae>"', '--', filename], stdout=PIPE, stderr=PIPE)
+		gitStdOut, gitStdErr = p.communicate()
+		files[filename]['input-commiter'] = stdResult(gitStdOut, gitStdErr)
+
+		# git --git-dir="%s" log -1 "--date=format:%s" --format=%ad --diff-filter=A -- filename
+		p = Popen(['git', gitDir, 'log', '-1', date, '--format=%ad', '--diff-filter=A', '--', filename], stdout=PIPE, stderr=PIPE)
+		gitStdOut, gitStdErr = p.communicate()
+		files[filename]['input-date-add'] = stdResult(gitStdOut, gitStdErr)
+
+		# git --git-dir="%s" log -1 "--format=%an <%ae>" --diff-filter=A -- filename
+		p = Popen(['git', gitDir, 'log', '-1', '"--format=%an <%ae>"', '--diff-filter=A', '--', filename], stdout=PIPE, stderr=PIPE)
+		gitStdOut, gitStdErr = p.communicate()
+		files[filename]['input-author'] = stdResult(gitStdOut, gitStdErr)
 
 def extCustom(*args):
 	if args[0] == HOOKPOINT_INIT:
@@ -80,10 +113,6 @@ def extMeta(*args):
 extGlobPattern = compile('%\((glob:([^:\)]+):([^:\)]+))\)')
 
 def extGlob(*args):
-	if args[0] == HOOKPOINT_INIT:
-		parser = args[1]
-		parser.add_option('-g', '--git-dir', dest='git_dir', default='%s/.git' % os.path.dirname(sys.argv[0]), help='Set GIT directory location, e.g. /home/user/repo/.git')
-
 	if args[0] == HOOKPOINT_PARSE:
 		filename, stack, files, options = args[1:5]
 		sourceDir = os.path.dirname(options.source)
@@ -109,8 +138,8 @@ def extGlob(*args):
 
 extensions = {
 	'filename': extFileName,
-	'date': extDate,
-	'gitdate': extGitDate,
+	'stat': extStat,
+	'git': extGit,
 	'custom': extCustom,
 	'meta': extMeta,
 	'glob': extGlob,
@@ -173,14 +202,8 @@ def main(options):
 			if md.Meta:
 				toFormat = []
 				for metaName in md.Meta:
-					if len(md.Meta[metaName]) == 1:
-						files[filename][metaName] = md.Meta[metaName][0]
-						toFormat.append(metaName)
-					else:
-						for idx, meta in enumerate(md.Meta[metaName]):
-							idxMetaName = '%s[%u]' % (metaName, idx)
-							files[filename][idxMetaName] = meta
-							toFormat.append(idxMetaName)
+					files[filename][metaName] = ''.join(md.Meta[metaName])
+					toFormat.append(metaName)
 
 				if options.trace:
 					print('format metadata: %s...' % toFormat, file=sys.stderr)
@@ -222,7 +245,7 @@ def main_m():
 	parser.add_option('-t', '--trace', dest='trace', action='store_true', default=False, help='Print diagnostic traces')
 	parser.add_option('-o', '--output', dest='output', help='Set output file')
 	parser.add_option('-m', '--markdown-ext', dest='markdown_ext', default='', help='Set markdown extension list, coma separated, e.g. meta,toc,footnotes,...')
-	parser.add_option('-d', '--date-fmt', dest='date_fmt', default='%d-%m-%Y %H:%M:%S', help='Set date format, e.g. %d-%m-%Y %H:%M:%S')
+	parser.add_option('-d', '--date-fmt', dest='date_fmt', default='%Y-%m-%d %H:%M:%S', help='Set date format, e.g. %Y-%m-%d %H:%M:%S')
 	parser.add_option('-e', '--ext', dest='ext', default='', help='Set extension list, e.g. meta,glob,filename,date,...')
 
 	# hook point
